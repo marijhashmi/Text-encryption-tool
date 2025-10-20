@@ -83,15 +83,6 @@ http://127.0.0.1:5000
 
 ---
 
-
-## 💡 Future Enhancements
-
-* Add user authentication to save encrypted messages.
-* Include more encryption methods (e.g., RSA, DES).
-* Create a React-based frontend for dynamic interaction.
-
----
-
 ## 🧑‍💻 Author
 
 **Muhammad Marij Younas**
