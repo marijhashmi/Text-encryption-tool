@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+instance/
+*.db
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Flask-related
+*.sqlite3
+
+# VS Code
+.vscode/
+
+# Node / Frontend (if used later)
+node_modules/
+dist/
+build/
+
+# System files
+.DS_Store
+Thumbs.db
