@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Web Text Encryption Tool</title>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; background:#f3f4f6; padding:24px; color:#111827; }
+    .card{max-width:800px;margin:24px auto;padding:20px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    label{display:block;margin-top:12px;font-weight:600}
+    textarea, input, select { width:100%; padding:10px; margin-top:6px; border:1px solid #e5e7eb;border-radius:6px; font-size:14px; box-sizing:border-box; }
+    .row{display:flex; gap:10px; margin-top:12px}
+    .row > *{flex:1}
+    button{padding:10px 14px;border-radius:6px;border:0;background:#2563eb;color:white;font-weight:600;cursor:pointer}
+    button.secondary{background:#6b7280}
+    .small{font-size:13px;color:#6b7280}
+    .top-row{display:flex; gap:10px; align-items:center}
+  </style>
+  <!-- CryptoJS CDN for AES (and SHA if needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+<body>
+  <div class="card">
+    <h2>Web-Based Text Encryption Tool</h2>
+    <div class="small">Enter text, pick an algorithm, provide any required key, then Encrypt / Decrypt.</div>
+
+    <label for="inputText">Plain text</label>
+    <textarea id="inputText" rows="5" placeholder="Type plain text here..."></textarea>
+
+    <label for="algo">Encryption algorithm</label>
+    <select id="algo">
+      <option value="">-- Select algorithm --</option>
+      <option value="caesar">Caesar Cipher (shift)</option>
+      <option value="base64">Base64 (not secure, encoding)</option>
+      <option value="aes">AES (password-based)</option>
+    </select>
+
+    <div id="params">
+      <!-- dynamic params appear here -->
+    </div>
+
+    <div class="row">
+      <button id="encryptBtn">Encrypt</button>
+      <button id="decryptBtn" class="secondary">Decrypt</button>
+      <button id="copyBtn" class="secondary">Copy</button>
+    </div>
+
+    <label for="outputText">Result</label>
+    <textarea id="outputText" rows="5" readonly placeholder="Ciphertext / Decrypted text appears here..."></textarea>
+    <div class="small" style="margin-top:8px">Validation: empty inputs and algorithm selection are required.</div>
+  </div>
+
+  <script>
+    // UI elements
+    const inputText = document.getElementById('inputText');
+    const algo = document.getElementById('algo');
+    const params = document.getElementById('params');
+    const outputText = document.getElementById('outputText');
+    const encryptBtn = document.getElementById('encryptBtn');
+    const decryptBtn = document.getElementById('decryptBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // render algorithm-specific parameter inputs
+    algo.addEventListener('change', () => {
+      params.innerHTML = '';
+      if (algo.value === 'caesar') {
+        params.innerHTML = `
+          <label for="shift">Shift (integer, e.g., 3)</label>
+          <input id="shift" type="number" value="3" min="0" />
+        `;
+      } else if (algo.value === 'aes') {
+        params.innerHTML = `
+          <label for="password">Password / Passphrase (used as key)</label>
+          <input id="password" type="text" placeholder="Enter a passphrase" />
+          <div class="small">AES uses the passphrase to derive an encryption key. Keep it secret.</div>
+        `;
+      } else if (algo.value === 'base64') {
+        params.innerHTML = `<div class="small">Base64 is encoding, not strong encryption.</div>`;
+      }
+    });
+
+    // Basic validation helper
+    function validate(requireOutput=false) {
+      const text = inputText.value.trim();
+      if (!algo.value) { alert('Please select an encryption algorithm'); return false; }
+      if (!text && !requireOutput) { alert('Please enter some text to encrypt/decrypt'); return false; }
+      if (algo.value === 'aes') {
+        const pwd = document.getElementById('password')?.value;
+        if (!pwd) { alert('AES requires a passphrase'); return false; }
+      }
+      if (algo.value === 'caesar') {
+        const s = document.getElementById('shift')?.value;
+        if (s === '' || s === null) { alert('Provide a shift for Caesar cipher'); return false; }
+      }
+      return true;
+    }
+
+    // Caesar cipher (basic, letters only for readability)
+    function caesarEncrypt(text, shift) {
+      shift = ((Number(shift) % 26) + 26) % 26;
+      return text.split('').map(ch => {
+        if (ch >= 'a' && ch <= 'z') {
+          return String.fromCharCode((ch.charCodeAt(0)-97+shift)%26 + 97);
+        } else if (ch >= 'A' && ch <= 'Z') {
+          return String.fromCharCode((ch.charCodeAt(0)-65+shift)%26 + 65);
+        } else return ch;
+      }).join('');
+    }
+    function caesarDecrypt(text, shift) { return caesarEncrypt(text, -shift); }
+
+    // Base64 encoding/decoding (handles utf-8 safely)
+    function base64Encode(str) {
+      try {
+        return btoa(unescape(encodeURIComponent(str)));
+      } catch (e) { return null; }
+    }
+    function base64Decode(str) {
+      try {
+        return decodeURIComponent(escape(atob(str)));
+      } catch (e) { return null; }
+    }
+
+    // AES using CryptoJS (password-based)
+    function aesEncrypt(plain, passphrase) {
+      return CryptoJS.AES.encrypt(plain, passphrase).toString();
+    }
+    function aesDecrypt(ciphertext, passphrase) {
+      try {
+        const bytes = CryptoJS.AES.decrypt(ciphertext, passphrase);
+        const txt = bytes.toString(CryptoJS.enc.Utf8);
+        return txt || null;
+      } catch (e) { return null; }
+    }
+
+    // Button handlers
+    encryptBtn.addEventListener('click', () => {
+      if (!validate()) return;
+      const algorithm = algo.value;
+      const text = inputText.value;
+      let result = '';
+      if (algorithm === 'caesar') {
+        const shift = Number(document.getElementById('shift').value);
+        result = caesarEncrypt(text, shift);
+      } else if (algorithm === 'base64') {
+        const enc = base64Encode(text);
+        if (enc === null) { alert('Base64 encode failed'); return; }
+        result = enc;
+      } else if (algorithm === 'aes') {
+        const pwd = document.getElementById('password').value;
+        result = aesEncrypt(text, pwd);
+      }
+      outputText.value = result;
+    });
+
+    decryptBtn.addEventListener('click', () => {
+      if (!validate()) return;
+      const algorithm = algo.value;
+      const text = inputText.value;
+      let result = '';
+      if (algorithm === 'caesar') {
+        const shift = Number(document.getElementById('shift').value);
+        result = caesarDecrypt(text, shift);
+      } else if (algorithm === 'base64') {
+        const dec = base64Decode(text);
+        if (dec === null) { alert('Invalid Base64 input'); return; }
+        result = dec;
+      } else if (algorithm === 'aes') {
+        const pwd = document.getElementById('password').value;
+        const dec = aesDecrypt(text, pwd);
+        if (dec === null) { alert('Decryption failed — wrong password or malformed ciphertext'); return; }
+        result = dec;
+      }
+      outputText.value = result;
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!outputText.value) { alert('Nothing to copy'); return; }
+      try {
+        await navigator.clipboard.writeText(outputText.value);
+        alert('Copied to clipboard');
+      } catch (e) {
+        outputText.select();
+        document.execCommand('copy');
+        alert('Copied (fallback)');
+      }
+    });
+  </script>
+</body>
+</html>
