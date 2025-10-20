@@ -1,6 +1,6 @@
 # 🔐 Web-Based Text Encryption Tool
 
-A **Flask-based web application** that allows users to encrypt and decrypt text using multiple algorithms, including **Caesar Cipher, AES, and SHA-256 hashing**.
+A **Flask-based web application** that allows users to encrypt and decrypt text using multiple algorithms, including **Caesar Cipher, AES, and base64**.
 The app provides a simple and secure interface for testing encryption techniques.
 
 ---
@@ -8,7 +8,7 @@ The app provides a simple and secure interface for testing encryption techniques
 ## 🚀 Features
 
 * Encrypt and decrypt plain text using selected algorithms.
-* Supports **Caesar Cipher**, **AES**, and **SHA-256 hashing**.
+* Supports **Caesar Cipher**, **AES**, and **base64**.
 * Option to **copy ciphertext** easily.
 * Basic **input validation** (no empty inputs, must select algorithm).
 * Built with a **responsive UI** for easy use.
@@ -79,27 +79,10 @@ http://127.0.0.1:5000
 | -------------------------------------- | --------------------------------------- | ------------------- |
 | **Caesar Cipher**                      | Shifts each character by a fixed key    | ✅ Yes               |
 | **AES (Advanced Encryption Standard)** | Symmetric encryption using a secret key | ✅ Yes               |
-| **SHA-256**                            | One-way hashing algorithm               | ❌ No (Hashing only) |
+| **base64**                            | Encodes text to ASCII format         |  ✅ Yes  |
 
 ---
 
-## 🧠 Project Structure
-
-```
-ENCRYPTION TOOL/
-│
-├── backend/
-│   ├── app.py              # Flask main application
-│   ├── models.py           # Database models (if used)
-│   ├── static/             # CSS, JS files
-│   ├── templates/          # HTML templates
-│   └── requirements.txt    # Dependencies
-│
-├── instance/               # Local database (ignored in Git)
-└── README.md
-```
-
----
 
 ## 💡 Future Enhancements
 
